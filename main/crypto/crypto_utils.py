@@ -58,7 +58,8 @@ def generate_user_keys(user):
 
 def get_user_private_key(user, password: bytes = None):
     """
-    Загружает приватный ключ пользователя
+    Загружает приватный ключ пользователя.
+    Если ключа нет, генерирует его автоматически.
     
     Args:
         user: объект User из Django
@@ -70,8 +71,14 @@ def get_user_private_key(user, password: bytes = None):
     user_keys_dir = os.path.join(settings.KEYS_DIR, f'user_{user.id}')
     private_key_path = os.path.join(user_keys_dir, 'private_key.pem')
     
+    # Если ключа нет - генерируем его автоматически
     if not os.path.exists(private_key_path):
-        raise FileNotFoundError(f"Приватный ключ пользователя {user.username} не найден")
+        print(f"Ключ пользователя {user.username} не найден. Генерируем новый...")
+        try:
+            generate_user_keys(user)
+        except Exception as e:
+            print(f"Ошибка при генерации ключей: {e}")
+            raise FileNotFoundError(f"Не удалось создать ключ для пользователя {user.username}")
     
     with open(private_key_path, 'rb') as f:
         private_key = serialization.load_pem_private_key(
