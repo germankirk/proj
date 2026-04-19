@@ -305,9 +305,13 @@ def sign_file(request):
                     'signature_path': f'/media/signatures/{file.name}.sig'
                 })
                 
-            except FileNotFoundError:
-                messages.error(request, 'Ошибка: Центральный ключ не найден.')
+            except FileNotFoundError as e:
+                print(f"FileNotFoundError в sign_file: {str(e)}")
+                messages.error(request, f'Ошибка: {str(e)}')
             except Exception as e:
+                print(f"Exception в sign_file: {type(e).__name__}: {str(e)}")
+                import traceback
+                traceback.print_exc()
                 messages.error(request, f'Ошибка при подписании: {str(e)}')
     else:
         form = SignFileForm()
