@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ task.title }} - Анализ файлов</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tasks.css' %}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-content">
+                <a href="/" class="logo">📄 Анализ файлов</a>
+                <div class="nav-buttons">
+                    <a href="/tasks/" class="btn btn-secondary">Мои задачи</a>
+                    <span class="user-greeting">{{ user.username }}</span>
+                    <a href="/auth/logout/" class="btn btn-secondary">Выход</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="task-detail-container">
+            <div class="task-detail">
+                <div class="task-detail-header">
+                    <h1>{{ task.title }}</h1>
+                    <span class="task-status task-status-{{ task.status }}">{{ task.get_status_display }}</span>
+                </div>
+
+                <div class="task-detail-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Автор:</span>
+                        <span class="meta-value">{{ task.author.username }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Создана:</span>
+                        <span class="meta-value">{{ task.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Обновлена:</span>
+                        <span class="meta-value">{{ task.updated_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                </div>
+
+                <div class="task-detail-description">
+                    <h3>Описание</h3>
+                    <p>{{ task.description }}</p>
+                </div>
+
+                <div class="task-detail-actions">
+                    {% if task.author == user %}
+                        <a href="/tasks/{{ task.pk }}/submissions/" class="btn btn-large btn-primary">Проверить работу</a>
+                        <a href="/tasks/{{ task.pk }}/edit/" class="btn btn-large btn-secondary">Изменить задачу</a>
+                        <a href="/tasks/{{ task.pk }}/delete/" class="btn btn-large btn-secondary">Удалить задачу</a>
+                    {% else %}
+                        <a href="/tasks/{{ task.pk }}/submit/" class="btn btn-large btn-primary">Подписать работу</a>
+                    {% endif %}
+                    <a href="/tasks/" class="btn btn-large btn-secondary">Вернуться к списку</a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

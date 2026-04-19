@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Проверка подписанного документа{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="mb-4">📋 Проверка подписанного документа</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header {% if is_valid %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h5 class="mb-0">
+                        {% if is_valid %}
+                            ✓ Подпись верна!
+                        {% else %}
+                            ✗ Подпись не совпадает!
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-secondary">Информация о документе</h6>
+                            <p><strong>Название файла:</strong> {{ original_filename }}</p>
+                            <p><strong>Статус подписи:</strong> 
+                                <span class="badge {% if is_valid %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if is_valid %}Проверена{% else %}Ошибка{% endif %}
+                                </span>
+                            </p>
+                            <p><strong>Хеш файла (SHA-256):</strong></p>
+                            <code style="word-break: break-all; background-color: #f8f9fa; padding: 8px; display: block; border-radius: 4px;">
+                                {{ signed_doc.file_hash }}
+                            </code>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-secondary">Информация о подписи</h6>
+                            <p><strong>Подписант:</strong> 
+                                <a href="{% url 'main:user_public_key' signed_doc.user.username %}">
+                                    {{ signer.username }} ({{ signer.get_full_name|default:"" }})
+                                </a>
+                            </p>
+                            <p><strong>Дата подписания:</strong> {{ signed_at|date:"d.m.Y H:i:s" }}</p>
+                            <p><strong>Тип подписи:</strong> RSA-2048</p>
+                            <p><strong>Алгоритм:</strong> SHA-256 с PSS padding</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Действия</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ signed_doc.file.url }}" class="btn btn-primary" download>
+                        📥 Скачать подписанный документ
+                    </a>
+                    <a href="{{ signed_doc.signature.url }}" class="btn btn-secondary" download>
+                        🔐 Скачать подпись (.sig)
+                    </a>
+                    <a href="{% url 'main:user_public_key' signed_doc.user.username %}" class="btn btn-info">
+                        🔑 Просмотреть открытый ключ подписанта
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-4 alert alert-info">
+                <h6>Как проверить подпись?</h6>
+                <ol>
+                    <li>Скачайте подписанный документ и его подпись (.sig файл)</li>
+                    <li>Скачайте открытый ключ подписанта</li>
+                    <li>Используйте криптографический инструмент (openssl, gpg и т.д.) для проверки подписи</li>
+                    <li>Это гарантирует, что документ не был изменен с момента подписания</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+code {
+    color: #e83e8c;
+    background-color: #f8f9fa;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+.badge {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+}
+
+.btn {
+    margin: 0 5px 5px 0;
+}
+</style>
+{% endblock %}

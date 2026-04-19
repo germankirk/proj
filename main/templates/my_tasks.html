@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои задачи - Анализ файлов</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tasks.css' %}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-content">
+                <a href="/" class="logo">📄 Анализ файлов</a>
+                <div class="nav-buttons">
+                    <a href="/tasks/create/" class="btn btn-primary">Создать задачу</a>
+                    <span class="user-greeting">{{ user.username }}</span>
+                    <a href="/auth/logout/" class="btn btn-secondary">Выход</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="tasks-container">
+            <div class="tasks-header">
+                <h1>Мои задачи</h1>
+                <p>Всего задач: {{ tasks.count }}</p>
+            </div>
+
+            <div class="file-upload-section">
+                <h3>Прикрепить файл</h3>
+                <form method="post" enctype="multipart/form-data" action="/tasks/upload/">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="file">Выберите файл:</label>
+                        <input type="file" id="file" name="file" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Загрузить файл</button>
+                </form>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </main>
+    </div>
+</body>
+</html>

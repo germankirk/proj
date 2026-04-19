@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Открытый ключ пользователя {{ user_profile.username }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="mb-4">🔑 Открытый ключ пользователя</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Информация пользователя</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Имя пользователя:</strong> {{ user_profile.username }}</p>
+                            <p><strong>Email:</strong> {{ user_profile.email }}</p>
+                            <p><strong>Полное имя:</strong> {{ user_profile.get_full_name|default:"Не указано" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Ключи созданы:</strong> {{ created_at|date:"d.m.Y H:i" }}</p>
+                            <p><strong>Тип ключа:</strong> RSA-2048</p>
+                            <p><strong>Алгоритм подписи:</strong> SHA-256 с PSS padding</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Открытый ключ (PEM формат)</h5>
+                    <button class="btn btn-sm btn-light" onclick="copyToClipboard()">📋 Копировать</button>
+                </div>
+                <div class="card-body">
+                    <textarea id="publicKeyText" class="form-control" rows="15" readonly style="font-family: monospace; font-size: 0.9em;">{{ public_key }}</textarea>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <p class="text-muted">
+                    <small>
+                        ℹ️ Этот открытый ключ используется для проверки подписей документов, подписанных пользователем {{ user_profile.username }}. 
+                        Вы можете безопасно делиться этим ключом с другими пользователями для проверки ваших подписей.
+                    </small>
+                </p>
+            </div>
+            
+
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const textArea = document.getElementById('publicKeyText');
+    textArea.select();
+    document.execCommand('copy');
+    alert('Открытый ключ скопирован в буфер обмена!');
+}
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+textarea {
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 12px;
+}
+
+.btn-light {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.btn-light:hover {
+    background-color: #e2e6ea;
+}
+</style>
+{% endblock %}

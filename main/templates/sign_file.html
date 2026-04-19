@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подпись и проверка файлов - Анализ файлов</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-content">
+                <a href="/" class="logo">📄 Анализ файлов</a>
+                <div class="nav-buttons">
+                    {% if user.is_authenticated %}
+                        <span class="user-greeting">{{ user.username }}</span>
+                        <a href="/auth/logout/" class="btn btn-secondary">Выход</a>
+                    {% else %}
+                        <a href="/auth/login/" class="btn btn-secondary">Вход</a>
+                        <a href="/auth/register/" class="btn btn-primary">Регистрация</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        <main class="auth-container">
+            <div class="form-wrapper">
+                <h1>🔐 Подпись и проверка файлов</h1>
+                <p class="form-subtitle">Подпишите ваш файл приватным ключом</p>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if signed %}
+                    <div class="success-message">
+                        <h3>✓ Файл успешно подписан!</h3>
+                        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                            <a href="/media/uploads/{{ filename }}" class="btn btn-primary" download>
+                                📥 Скачать файл
+                            </a>
+                            <a href="{{ signature_path }}" class="btn btn-primary" download>
+                                📥 Скачать подпись (.sig)
+                            </a>
+                        </div>
+                        <a href="{% url 'main:sign_file' %}" class="btn btn-secondary" style="margin-top: 20px; display: block; text-align: center;">Подписать ещё файл</a>
+                    </div>
+                {% else %}
+                    <form method="post" enctype="multipart/form-data" class="form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            {{ form.file.label_tag }}
+                            {{ form.file }}
+                            {% if form.file.errors %}
+                                <span class="form-error">{{ form.file.errors }}</span>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-large">Подписать файл</button>
+                    </form>
+                {% endif %}
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <a href="{% url 'main:verify_file' %}" class="btn btn-secondary">Проверить подпись</a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ответы - {{ task.title }} - Анализ файлов</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tasks.css' %}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-content">
+                <a href="/" class="logo">📄 Анализ файлов</a>
+                <div class="nav-buttons">
+                    <a href="/tasks/" class="btn btn-secondary">Мои задачи</a>
+                    <span class="user-greeting">{{ user.username }}</span>
+                    <a href="/auth/logout/" class="btn btn-secondary">Выход</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="tasks-container">
+            <div class="tasks-header">
+                <h1>Ответы на задачу</h1>
+                <p>{{ task.title }}</p>
+                <p class="submissions-count">Всего ответов: {{ submissions.count }}</p>
+            </div>
+
+            {% if submissions %}
+                <div class="submissions-list">
+                    {% for submission in submissions %}
+                        <div class="submission-card">
+                            <div class="submission-header">
+                                <h3>{{ submission.user.username }}</h3>
+                                <span class="submission-date">{{ submission.submitted_at|date:"d.m.Y H:i" }}</span>
+                            </div>
+
+                            {% if submission.comment %}
+                                <div class="submission-comment">
+                                    <p>{{ submission.comment }}</p>
+                                </div>
+                            {% endif %}
+
+                            <div class="submission-file">
+                                <a href="{{ submission.file.url }}" class="btn btn-large btn-primary" download>
+                                    📥 Скачать файл
+                                </a>
+                                <span class="file-name">{{ submission.file.name|truncatewords:3 }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-tasks">
+                    <p>На эту задачу ещё никто не ответил</p>
+                    <a href="/tasks/{{ task.pk }}/" class="btn btn-large btn-secondary">Вернуться к задаче</a>
+                </div>
+            {% endif %}
+        </main>
+    </div>
+</body>
+</html>

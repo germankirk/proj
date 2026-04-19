@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сдать задачу - Анализ файлов</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-content">
+                <a href="/" class="logo">📄 Анализ файлов</a>
+                <div class="nav-buttons">
+                    <a href="/tasks/" class="btn btn-secondary">Мои задачи</a>
+                    <span class="user-greeting">{{ user.username }}</span>
+                    <a href="/auth/logout/" class="btn btn-secondary">Выход</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="auth-container">
+            <div class="auth-form">
+                <h1 class="auth-title">{% if existing_submission %}Обновить ответ{% else %}Сдать задачу{% endif %}</h1>
+                <p class="auth-subtitle">{{ task.title }}</p>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data" class="form">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">{{ form.file.label }}</label>
+                        {{ form.file }}
+                        <small class="form-help">Поддерживаемые форматы: документы, архивы, исходный код</small>
+                        {% if form.file.errors %}
+                            <span class="form-error">{{ form.file.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.comment.id_for_label }}" class="form-label">{{ form.comment.label }}</label>
+                        {{ form.comment }}
+                        {% if form.comment.errors %}
+                            <span class="form-error">{{ form.comment.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-large btn-primary form-submit">{% if existing_submission %}Обновить ответ{% else %}Сдать задачу{% endif %}</button>
+                </form>
+
+                <p class="auth-link">
+                    <a href="/tasks/{{ task.pk }}/">Вернуться к задаче</a>
+                </p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Удалить задачу - Анализ файлов</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-content">
+                <a href="/" class="logo">📄 Анализ файлов</a>
+                <div class="nav-buttons">
+                    <a href="/tasks/" class="btn btn-secondary">Мои задачи</a>
+                    <span class="user-greeting">{{ user.username }}</span>
+                    <a href="/auth/logout/" class="btn btn-secondary">Выход</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="auth-container">
+            <div class="auth-form">
+                <h1 class="auth-title">Удалить задачу?</h1>
+                <p class="auth-subtitle">Это действие нельзя будет отменить</p>
+
+                <div class="delete-confirm">
+                    <h3>{{ task.title }}</h3>
+                    <p>{{ task.description|truncatewords:30 }}</p>
+                </div>
+
+                <form method="post" class="form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-large btn-secondary form-submit">Да, удалить задачу</button>
+                </form>
+
+                <p class="auth-link">
+                    <a href="/tasks/{{ task.pk }}/">Отменить, вернуться к задаче</a>
+                </p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
