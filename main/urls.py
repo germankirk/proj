@@ -18,6 +18,7 @@ urlpatterns = [
     path('tasks/<int:pk>/submissions/', views.task_submissions, name='task_submissions'),
     path('sign/', views.sign_file, name='sign_file'),
     path('verify/', views.verify_file, name='verify_file'),
+    path('download/signature/<int:doc_id>/', views.download_signature, name='download_signature'),
     # Маршруты для проверки подписанных документов
     path('documents/<int:doc_id>/verify/', views.verify_signed_document, name='verify_signed_document'),
     path('users/<str:username>/public-key/', views.user_public_key, name='user_public_key'),

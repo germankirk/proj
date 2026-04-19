@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.http import HttpResponse, FileResponse
 from datetime import timedelta
 import os
 import hashlib
@@ -322,11 +323,22 @@ def sign_file(request):
                     # Не прерываем процесс, если сохранение в БД не удалось
                 
                 messages.success(request, f'Файл {file.name} успешно подписан! Подпись сохранена.')
+                
+                # Возвращаем правильный путь для скачивания из БД
+                try:
+                    signed_doc = SignedDocument.objects.filter(
+                        user=request.user,
+                        original_filename=file.name
+                    ).latest('signed_at')
+                    signature_path = f'/download/signature/{signed_doc.id}/'
+                except:
+                    signature_path = f'/media/signatures/{file.name}.sig'
+                
                 return render(request, 'sign_file.html', {
                     'form': form,
                     'signed': True,
                     'filename': file.name,
-                    'signature_path': f'/media/signatures/{file.name}.sig'
+                    'signature_path': signature_path
                 })
                 
             except FileNotFoundError as e:
@@ -341,6 +353,36 @@ def sign_file(request):
         form = SignFileForm()
     
     return render(request, 'sign_file.html', {'form': form})
+
+
+@login_required(login_url='main:login')
+def download_signature(request, doc_id):
+    """Безопасное скачивание подписи из БД"""
+    try:
+        signed_doc = SignedDocument.objects.get(id=doc_id)
+        
+        # Проверяем что пользователь может скачать эту подпись
+        # (свою или если он администратор)
+        if signed_doc.user != request.user and not request.user.is_staff:
+            messages.error(request, 'У вас нет прав на скачивание этой подписи.')
+            return redirect('main:index')
+        
+        # Открываем и отправляем файл подписи
+        if signed_doc.signature:
+            response = FileResponse(signed_doc.signature.open('rb'))
+            response['Content-Disposition'] = f'attachment; filename="{signed_doc.original_filename}.sig"'
+            return response
+        else:
+            messages.error(request, 'Подпись не найдена.')
+            return redirect('main:index')
+            
+    except SignedDocument.DoesNotExist:
+        messages.error(request, 'Подписанный документ не найден.')
+        return redirect('main:index')
+    except Exception as e:
+        print(f"Ошибка при скачивании подписи: {e}")
+        messages.error(request, f'Ошибка при скачивании: {str(e)}')
+        return redirect('main:index')
 
 
 @login_required(login_url='main:login')
