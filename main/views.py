@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
 from django.core.files.base import ContentFile
+from datetime import timedelta
 import os
 import hashlib
 from .forms import RegisterForm, LoginForm, TaskForm, SubmissionForm, SignFileForm
 from .models import Task, Submission, UserKeys, SignedDocument
-from .crypto.crypto_utils import sign_hash, verify_signature, sign_file_with_user_key, verify_signature_with_user_key
+from .crypto.crypto_utils import sign_hash, verify_signature, sign_file_with_user_key, verify_signature_with_user_key, calculate_file_hash
 
 
 def index(request):
@@ -262,6 +263,8 @@ def upload_file(request):
 
 
 @login_required(login_url='main:login')
+
+@login_required(login_url='main:login')
 def sign_file(request):
     """Подпись файла приватным ключом пользователя"""
     if request.method == 'POST':
@@ -284,7 +287,7 @@ def sign_file(request):
                 # Подписываем файл приватным ключом пользователя
                 signature, file_hash = sign_file_with_user_key(upload_path, request.user)
                 
-                # Сохраняем подпись
+                # Сохраняем подпись в файловую систему
                 sig_path = os.path.join(settings.MEDIA_ROOT, 'signatures', file.name + '.sig')
                 os.makedirs(os.path.dirname(sig_path), exist_ok=True)
                 
@@ -295,6 +298,28 @@ def sign_file(request):
                 content_path = os.path.join(settings.MEDIA_ROOT, 'signatures', file.name + '.txt')
                 with open(content_path, 'wb') as f:
                     f.write(file_content)
+                
+                # Сохраняем информацию о подписании в БД
+                try:
+                    from django.core.files.base import ContentFile
+                    
+                    signed_doc = SignedDocument(
+                        user=request.user,
+                        original_filename=file.name,
+                        file_hash=file_hash,
+                        is_verified=True
+                    )
+                    
+                    # Сохраняем основной файл в БД
+                    signed_doc.file.save(file.name, ContentFile(file_content))
+                    
+                    # Сохраняем подпись в БД
+                    signed_doc.signature.save(file.name + '.sig', ContentFile(signature))
+                    
+                    signed_doc.save()
+                except Exception as e:
+                    print(f"Ошибка при сохранении в БД: {e}")
+                    # Не прерываем процесс, если сохранение в БД не удалось
                 
                 messages.success(request, f'Файл {file.name} успешно подписан! Подпись сохранена.')
                 return render(request, 'sign_file.html', {
@@ -342,8 +367,31 @@ def verify_file(request):
                     for chunk in signature_file.chunks():
                         dest.write(chunk)
                 
-                # Проверяем подпись
-                is_valid = verify_signature(file_path, sig_path)
+                # Рассчитываем хеш файла для поиска в БД
+                file_hash = calculate_file_hash(file_path)
+                
+                # Ищем информацию о подписании в БД
+                signer = None
+                signed_at = None
+                is_valid = False
+                
+                try:
+                    signed_doc = SignedDocument.objects.get(file_hash=file_hash)
+                    signer = signed_doc.user
+                    signed_at = signed_doc.signed_at + timedelta(hours=3)
+                    
+                    # Если документ найден в БД - проверяем подпись с пользовательским ключом
+                    # Прочитаем содержимое файла подписи
+                    with open(sig_path, 'rb') as f:
+                        signature_bytes = f.read()
+                    
+                    is_valid = verify_signature_with_user_key(file_path, signature_bytes, signer)
+                except SignedDocument.DoesNotExist:
+                    # Если документ не найден в БД - пытаемся проверить с центральным ключом
+                    is_valid = verify_signature(file_path, sig_path)
+                except Exception as e:
+                    print(f"Ошибка при проверке через БД: {e}")
+                    is_valid = False
                 
                 # Загружаем содержимое файла если подпись верна
                 file_content = ''
@@ -362,7 +410,10 @@ def verify_file(request):
                     'is_valid': is_valid,
                     'filename': file.name,
                     'file_content': file_content,
-                    'message': '✓ Подпись верна!' if is_valid else '✗ Подпись не совпадает!'
+                    'message': '✓ Подпись верна!' if is_valid else '✗ Подпись не совпадает!',
+                    'signer': signer,
+                    'signed_at': signed_at,
+                    'file_hash': file_hash,
                 })
                 
             except Exception as e:
@@ -415,7 +466,7 @@ def verify_signed_document(request, doc_id):
             'signed_doc': signed_doc,
             'is_valid': is_valid,
             'signer': signed_doc.user,
-            'signed_at': signed_doc.signed_at,
+            'signed_at': signed_doc.signed_at + timedelta(hours=3),
             'original_filename': signed_doc.original_filename
         })
     except SignedDocument.DoesNotExist:

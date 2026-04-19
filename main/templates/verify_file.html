@@ -125,6 +125,12 @@
                     <div class="result-message {% if is_valid %}success-message{% else %}error-message{% endif %}">
                         <h3>{{ message }}</h3>
                         <p><strong>Файл:</strong> {{ filename }}</p>
+                        {% if signer %}
+                            <p><strong>Подписант:</strong> <a href="{% url 'main:user_public_key' signer.username %}">{{ signer.username }} ({{ signer.get_full_name|default:"" }})</a></p>
+                        {% endif %}
+                        {% if signed_at %}
+                            <p><strong>Дата подписания:</strong> {{ signed_at|date:"d.m.Y H:i:s" }}</p>
+                        {% endif %}
                         {% if is_valid %}
                             <p style="color: #4CAF50; font-weight: bold;">✓ Подпись действительна</p>
                             {% if file_content %}

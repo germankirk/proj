@@ -5,6 +5,24 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.asymmetric.utils import Prehashed
 
 
+def calculate_file_hash(file_path):
+    """
+    Рассчитывает SHA256 хеш файла
+    
+    Args:
+        file_path: путь к файлу
+    
+    Returns:
+        str: хеш файла в формате hex
+    """
+    with open(file_path, "rb") as f:
+        data = f.read()
+    
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(data)
+    return digest.finalize().hex()
+
+
 def generate_user_keys(user):
     """
     Генерирует RSA-2048 ключи для пользователя
