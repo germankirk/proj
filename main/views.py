@@ -263,7 +263,7 @@ def upload_file(request):
 
 @login_required(login_url='main:login')
 def sign_file(request):
-    """Подпись файла центральным ключом"""
+    """Подпись файла приватным ключом пользователя"""
     if request.method == 'POST':
         form = SignFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -281,9 +281,8 @@ def sign_file(request):
                         destination.write(chunk)
                         file_content += chunk
                 
-                # Подписываем файл центральным ключом
-                from main.crypto.crypto_utils import sign_file_with_central_key
-                signature, file_hash = sign_file_with_central_key(upload_path)
+                # Подписываем файл приватным ключом пользователя
+                signature, file_hash = sign_file_with_user_key(upload_path, request.user)
                 
                 # Сохраняем подпись
                 sig_path = os.path.join(settings.MEDIA_ROOT, 'signatures', file.name + '.sig')
